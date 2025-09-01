@@ -24,32 +24,45 @@
       <a href="forgot.html">Lupa password?</a>
     </p>
     <p class="text-danger text-center mt-2 d-none" id="errorMsg">Login gagal!</p>
+    <pre id="output" class="bg-light p-3 rounded"></pre>
   </div>
 
 <script>
+const proxy = "https://cors-anywhere.herokuapp.com/";
 const scriptURL = "https://script.google.com/macros/s/AKfycbxTwTrCns9Lkm3kADnTpyCI-ni7oc3qwHd94eCP9cfSRcwlbPbHK8qZ7Hp9FYKf2kiP/exec";
 
-document.getElementById("loginForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  fetch(scriptURL, {
-    method: "POST",
-    body: JSON.stringify({action:"login", username, password}),
-    headers: {"Content-Type":"application/json"}
-  })
-  .then(res=>res.json())
-  .then(data=>{
-    if(data.status==="success"){
-      localStorage.setItem("username", username);
-      localStorage.setItem("role", data.role);
-      window.location.href = "index.html";
-    } else {
-      document.getElementById("errorMsg").classList.remove("d-none");
-    }
-  });
-});
+      const payload = {
+        action: "login",
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      };
+
+      try {
+        const res = await fetch(proxy + scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        })
+        .then(res=>res.json())
+        .then(data=>{
+          if(data.status==="success"){
+            localStorage.setItem("username", username);
+            localStorage.setItem("role", data.role);
+            window.location.href = "index.html";
+          } else {
+            document.getElementById("errorMsg").classList.remove("d-none");
+          }
+        });
+        const text = await res.text(); // karena Apps Script kadang balikin text/html
+        document.getElementById("output").textContent = text;
+
+      } catch (err) {
+        document.getElementById("output").textContent = "Error: " + err;
+      }
+    });
 </script>
 </body>
 </html>
